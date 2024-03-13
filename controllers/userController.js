@@ -8,9 +8,9 @@ const UserModel = require("../model/usersModel.js");
 
 function loginPage(req, res) {
   if (req.session.isLogin) {
-    res.render("homePage", { userDetails: req.session.userDetails });
+    res.render("userPages/homePage", { userDetails: req.session.userDetails });
   } else {
-    res.render("loginPage", { notValid: req.session.notValid });
+    res.render("userPages/loginPage", { notValid: req.session.notValid });
     req.session.notValid = false;
     req.session.save();
   }
@@ -18,9 +18,9 @@ function loginPage(req, res) {
 
 function signUpPage(req, res) {
   if (req.session.isLogin) {
-    res.render("homePage", { userDetails: req.session.userDetails });
+    res.render("userPages/homePage", { userDetails: req.session.userDetails });
   }
-  res.render("signUpPage", {
+  res.render("userPages/signUpPage", {
     userExist: req.session.userExist,
   });
 
