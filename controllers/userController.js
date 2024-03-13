@@ -1,63 +1,104 @@
-const { emailValidate, hashPassword } = require("../helperFunctions/helper");
-const UserModel = require("../model/usersModel");
+const bcrypt = require("bcrypt");
+const {
+  emailValidate,
+  hashPassword,
+  comparePassword,
+} = require("../helperFunctions/helper");
+const UserModel = require("../model/usersModel.js");
 
-function initialPage(req, res) {
-  res.render("loginSignup", {
-    inputErr: req.session.inputErr,
-    errMsg: req.session.errorMessage,
+function loginPage(req, res) {
+  if (req.session.isLogin) {
+    res.render("homePage", { userDetails: req.session.userDetails });
+  } else {
+    res.render("loginPage", { notValid: req.session.notValid });
+    req.session.notValid = false;
+    req.session.save();
+  }
+}
+
+function signUpPage(req, res) {
+  if (req.session.isLogin) {
+    res.render("homePage", { userDetails: req.session.userDetails });
+  }
+  res.render("signUpPage", {
     userExist: req.session.userExist,
-    notValid: req.session.notValid,
   });
 
-  req.session.notValid = false;
   req.session.userExist = false;
-  req.session.inputErr = false;
   req.session.save();
 }
 
 const signUpSubmit = async (req, res) => {
-  const { name, email, phone, password } = req.body;
+  try {
+    const { name, email, phone, password } = req.body;
 
-  // validating
-  const errMsg = {};
+    const existingUser = await UserModel.findOne({ email });
 
-  req.session.inputErr = false;
+    if (existingUser) {
+      req.session.userExist = true;
+      res.redirect("/signUpPage");
+    } else {
+      const hashedPassword = await hashPassword(password);
 
-  if (name === "" || !/^[A-Za-z]+$/.test(name)) {
-    errMsg["name"] = "Name is not valid";
-    req.session.inputErr = true;
-  }
-
-  if (!emailValidate(email)) {
-    errMsg["email"] = "Email is Not Valid";
-    req.session.inputErr = true;
-  }
-
-  if (phone.length < 10 || phone.length > 10) {
-    errMsg["phone"] = "Phone Number is not Valid";
-    req.session.inputErr = true;
-  }
-
-  if (password.length < 6) {
-    errMsg["password"] = "Password should be Grater than 6 Characters";
-    req.session.inputErr = true;
-  }
-
-  const existingUser = await UserModel.findOne({ email });
-
-  if (req.session.inputErr) {
-    req.session.errorMessage = errMsg;
-    res.redirect("/");
-  } else if (existingUser) {
-    req.session.userExist = true;
-    res.redirect("/");
-  } else {
-    const hashedPassword = await hashPassword(password);
-
-    let addUser = await new UserModel({}).save();
+      let addUser = await new UserModel({
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+      }).save();
+      req.session.isLogin = true;
+      req.session.userDetails = addUser;
+      res.redirect("/");
+    }
+  } catch (err) {
+    console.log(`Error in SignUp Registering : ${err}`);
   }
 };
 
+const loginSubmit = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (email === "") {
+      req.session.notValid = true;
+      res.redirect("/");
+    }
+    if (password === "") {
+      req.session.notValid = true;
+      res.redirect("/");
+    }
+
+    const foundUser = await UserModel.findOne({ email });
+    let passwordMatch;
+
+    if (foundUser) {
+      passwordMatch = await bcrypt.compare(password, foundUser.password);
+    }
+    console.log(passwordMatch);
+
+    if (!foundUser || !passwordMatch) {
+      req.session.notValid = true;
+      res.redirect("/");
+    } else {
+      // res.send("HI THIS IS THE LOGINE");
+      req.session.isLogin = true;
+      req.session.userDetails = foundUser;
+      res.redirect("/");
+    }
+  } catch (err) {
+    console.log("Error in LogIn" + err);
+  }
+};
+
+const logOut = (req, res) => {
+  req.session.isLogin = false;
+  res.redirect("/");
+};
+
 module.exports = {
-  initialPage,
+  loginPage,
+  signUpPage,
+  signUpSubmit,
+  loginSubmit,
+  logOut,
 };

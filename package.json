@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "description": "This is the project contains sign up login admin",
   "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/YaseerM16/signup-login-admin.git"
@@ -22,6 +20,9 @@
     "ejs": "^3.1.9",
     "express": "^4.18.3",
     "express-session": "^1.18.0",
-    "mongoose": "^8.2.1"
+    "mongoose": "^8.2.1",
+    "morgan": "^1.10.0",
+    "nocache": "^4.0.0",
+    "nodemon": "^3.1.0"
   }
 }

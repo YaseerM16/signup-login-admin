@@ -22,3 +22,5 @@ const usersSchema = new mongoose.Schema({
     default: false,
   },
 });
+
+module.exports = mongoose.model("Users", usersSchema);
